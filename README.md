@@ -10,7 +10,7 @@ Then:
 pip install streamlit
 
 pip install joblib
-
+pip install shap
 pip install xgboost
 
 Then:
