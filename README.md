@@ -11,6 +11,8 @@ pip install streamlit
 
 pip install joblib
 
+pip install xgboost
+
 Then:
 streamlit run app.py
 
