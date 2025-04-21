@@ -9,6 +9,8 @@ pip install --only-binary=:all: pyarrow
 Then:
 pip install streamlit
 
+pip install joblib
+
 Then:
 streamlit run app.py
 
