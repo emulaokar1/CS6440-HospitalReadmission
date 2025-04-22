@@ -3,12 +3,14 @@ import pandas as pd
 from datetime import datetime, timedelta
 
 # Load OMOP tables (SYNTHEA data)
-patient = pd.read_csv("data/patients.csv")
-visit = pd.read_csv("data/encounters.csv")
-condition = pd.read_csv("data/conditions.csv")
-drug = pd.read_csv("data/medications.csv")
-measurement = pd.read_csv("data/observations.csv")
-procedure = pd.read_csv("data/procedures.csv")
+patient = pd.read_csv("../data/patients.csv")
+visit = pd.read_csv("../data/encounters.csv")
+condition = pd.read_csv("../data/conditions.csv")
+drug = pd.read_csv("../data/medications.csv")
+measurement = pd.read_csv("../data/observations.csv")
+procedure = pd.read_csv("../data/procedures.csv")
+
+drug1 = pd.read_csv("../data/medications.csv")
 
 # Prepare visit table
 visit.rename(columns={"Id": "VISIT_ID"}, inplace=True)
@@ -56,10 +58,10 @@ merged["next_visit_gap_days"] = (merged["next_visit_start"] - merged["visit_end_
 merged["readmitted_30_days"] = (merged["next_visit_gap_days"] <= 30).astype(int)
 merged["readmitted_60_days"] = (merged["next_visit_gap_days"] <= 60).astype(int)
 
-# Step 1: Clean and lowercase descriptions
+# Clean and lowercase descriptions
 condition["DESCRIPTION"] = condition["DESCRIPTION"].astype(str).str.lower()
 
-# Step 2: Define 8 key condition flags using keywords
+# Define 8 key condition flags using keywords
 flags = {
     "has_heart_disease": "heart|coronary|myocardial|cvd|angina|mi",
     "has_diabetes": "diabetes",
@@ -74,16 +76,16 @@ flags = {
 for flag, pattern in flags.items():
     condition[flag] = condition["DESCRIPTION"].str.contains(pattern, na=False)
 
-# Step 3 (optional but recommended): filter out vague entries
+# Filter out vague entries
 # Only keep conditions that match at least one of the flags
 flag_columns = list(flags.keys())
 condition["has_any_flag"] = condition[flag_columns].any(axis=1)
 condition_filtered = condition[condition["has_any_flag"]].copy()
 
-# Step 4: Aggregate per ENCOUNTER (i.e., per VISIT_ID)
+# Aggregate per ENCOUNTER (i.e., per VISIT_ID)
 condition_flags_agg = condition_filtered.groupby("ENCOUNTER")[flag_columns].max().reset_index()
 
-# Step 5: Merge into main `merged` dataset
+# Merge into main `merged` dataset
 merged = merged.merge(
     condition_flags_agg, left_on="VISIT_ID", right_on="ENCOUNTER", how="left"
 ).drop(columns=["ENCOUNTER"]).fillna(0)
@@ -98,10 +100,10 @@ disease_flags = [
 for flag in disease_flags:
     merged[flag] = merged[flag].astype(int)
 
-# Step 1: Clean medication descriptions
+# Clean medication descriptions
 drug["DESCRIPTION"] = drug["DESCRIPTION"].astype(str).str.lower()
 
-# Step 2: Define keyword-based medication flags
+# Define keyword-based medication flags
 drug["is_opioid"] = drug["DESCRIPTION"].str.contains("morphine|fentanyl|oxycodone|hydrocodone", na=False)
 drug["is_insulin"] = drug["DESCRIPTION"].str.contains("insulin", na=False)
 drug["is_anticoagulant"] = drug["DESCRIPTION"].str.contains("warfarin|heparin|apixaban|xarelto", na=False)
@@ -109,18 +111,18 @@ drug["is_antipsychotic"] = drug["DESCRIPTION"].str.contains("haloperidol|risperi
 drug["is_antibiotic"] = drug["DESCRIPTION"].str.contains("penicillin|amoxicillin|azithromycin", na=False)
 drug["is_statins"] = drug["DESCRIPTION"].str.contains("atorvastatin|simvastatin", na=False)
 
-# Step 3: Aggregate max per encounter
+# Aggregate max per encounter
 medication_flags = [
     "is_opioid", "is_insulin", "is_anticoagulant", "is_antipsychotic", "is_antibiotic", "is_statins"
 ]
 drug_flags_agg = drug.groupby("ENCOUNTER")[medication_flags].max().reset_index()
 
-# Step 4: Merge into merged DataFrame
+# Merge into merged DataFrame
 merged = merged.merge(
     drug_flags_agg, left_on="VISIT_ID", right_on="ENCOUNTER", how="left"
 ).drop(columns=["ENCOUNTER"]).fillna(0)
 
-# Step 5: Cast to int
+# Cast to int
 for flag in medication_flags:
     merged[flag] = merged[flag].astype(int)
 

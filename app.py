@@ -174,7 +174,7 @@ if submitted:
     # ──────────────────────────────────────
     row = {f: 0 for f in features}
 
-    # Numeric + one‑hot you already have:
+    # Numeric + one‑hot we already have:
     row["age_at_visit"]      = age
     row["length_of_stay"]    = length_of_stay
     row["num_conditions"]    = num_conditions
@@ -185,7 +185,7 @@ if submitted:
     row["GENDER_M"] = 1 if gender == "Male" else 0
     row["GENDER_F"] = 1 if gender == "Female" else 0
 
-    # map race -> one‑hot exactly as in your FEATURES list
+    # map race -> one‑hot exactly as in the FEATURES list
     race_map = {
         "White":     "RACE_white",
         "Black":     "RACE_black",
@@ -216,7 +216,7 @@ if submitted:
     # 2) Parse comorbidities_input text
     # ──────────────────────────────────────
     text = comorbidities_input.lower()
-    # disease patterns must match what you used in preprocessing
+    # disease patterns must match what was used in preprocessing
     disease_patterns = {
         "has_heart_disease":      ["heart", "coronary", "myocardial", "cvd", "angina", "mi"],
         "has_diabetes":           ["diabetes"],
@@ -363,7 +363,6 @@ if submitted:
         st.pyplot(fig)
 
 
-    # Final note
     # Disclaimer
     st.markdown("""
     <div style='
